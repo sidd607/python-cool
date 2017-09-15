@@ -1,0 +1,21 @@
+from collections import namedtuple
+
+
+Assignment = namedtuple('Assignment', 'ident expr')
+Attribute = namedtuple('Attribute', 'ident type expr')
+BinaryOperation = namedtuple('BinaryOperation', 'operator left right')
+Block = namedtuple('Block', 'elements')
+Case = namedtuple('Case', 'expr typeactions')
+Formal = namedtuple('Formal', 'ident type')
+FunctionCall = namedtuple('FunctionCall', 'ident params')
+Ident = namedtuple('Ident', 'name')
+If = namedtuple('If', 'condition true false')
+Let = namedtuple('Let', 'assignments expr')
+MethodCall = namedtuple('MethodCall', 'object targettype method')
+Method = namedtuple('Method', 'ident type formals expr')
+New = namedtuple('New', 'type')
+Type = namedtuple('Type', 'name inherits features')
+TypeAction = namedtuple('TypeAction', 'ident type expr')
+UnaryOperation = namedtuple('UnaryOperation', 'operator right')
+While = namedtuple('While', 'condition action')
+Self = namedtuple('Self','ident')
