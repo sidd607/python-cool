@@ -48,7 +48,8 @@ def p_classes(p):
 def p_class(p):
     """class : CLASS TYPE inheritance LBRACE features_opt RBRACE SEMICOLON"""
     p[0] = ast.Type(name=p[2], inherits=p[3], features=p[5])
-    
+
+
 def p_inheritance(p):
     """inheritance : INHERITS TYPE
                    | empty"""
@@ -182,7 +183,7 @@ def p_typeaction(p):
 def p_function_call(p):
     """function_call : ID LPAREN params_opt RPAREN"""
     p[0] = ast.FunctionCall(ident=ast.Ident(p[1]), params=p[3])
-    
+
 
 def p_targettype_opt(p):
     """targettype_opt : targettype
@@ -263,10 +264,13 @@ def p_empty(p):
 def p_error(p):
     print('Syntax error in input at {!r}'.format(p))
 
-
 # Create parser
 yacc.yacc()
 
+def get_ast(sourcefile):
+	with open(sourcefile, 'r') as source:
+		t = yacc.parse(source.read())
+	return t
 
 if __name__ == '__main__':
 
@@ -288,7 +292,6 @@ if __name__ == '__main__':
 
     with open(sourcefile, 'r') as source:
         t = yacc.parse(source.read())
-
     # Print AST
-
+    print (t)
     print_ast(t)
