@@ -3,11 +3,11 @@ class List{
 	head(): Int { { abort(); 0; } };
 	tail(): List { { abort(); self; } };
 	add (i: Int) : List {
-		(new Cons).init(i, self)	
+		(new Cons).init(i, self)
 	};
 };
 
-class Cons inherits List {
+class Cons inherits Bool {
 	hd : Int;
 	tl : List;
 	isNil():Bool {false};
@@ -17,8 +17,8 @@ class Cons inherits List {
 		{
 			hd <- i;
 			tl <- l;
-			self;	
-		}	
+			self;
+		}
 	};
 };
 
@@ -30,11 +30,11 @@ class Main inherits IO {
 		if i.isNil() then out_string("\n")
 		else{
 			print(i.tail());
-			out_string(" ");			
-			out_int(i.head());			
+			out_string(" ");
+			out_int(i.head());
 		}
 		fi
-	}; 
+	};
 
 	main(): Object{
 		{
@@ -42,6 +42,6 @@ class Main inherits IO {
 			print(mylist);
 			out_string("\n");
 		}
-		
+
 	};
 };
