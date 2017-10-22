@@ -1,4 +1,4 @@
-class List{
+class List {
 	isNil():Bool {true};
 	head(): Int { { abort(); 0; } };
 	tail(): List { { abort(); self; } };
@@ -7,7 +7,7 @@ class List{
 	};
 };
 
-class Cons inherits Bool {
+class Cons inherits List {
 	hd : Int;
 	tl : List;
 	isNil():Bool {false};

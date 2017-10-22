@@ -59,6 +59,31 @@ class Semant:
                 for cl_name in self.inheritance_graph[parent]:
                     raise SemantError("Class %s cannot inherit from base class %s" % (cl_name, parent))
 
+        def visit_inheritance_tree(self,start_class,visited):
+            visited[start_class] = True
+            print(visited)
+            if start_class not in self.inheritance_graph.keys():
+                return True
+
+            for childc in self.inheritance_graph[start_class]:
+                #print("%s to %s" % (start_class, childc))
+                self.visit_inheritance_tree(childc, visited)
+
+            return True
+
+        def check_for_inheritance_cycles(self):
+            visited = {}
+            for parent_name in self.inheritance_graph.keys():
+                visited[parent_name] = False
+                for cl_name in self.inheritance_graph[parent_name]:
+                    visited[cl_name] = False
+            self.visit_inheritance_tree("Object", visited)
+
+            for k,v in visited.items():
+                if not v:
+                    raise SemantError("%s involved in an inheritance cycle." % k)
+
+
 if __name__ == '__main__':
 
     import sys
@@ -67,3 +92,4 @@ if __name__ == '__main__':
     sem.populate_classes_map_and_inheritance_map()
     sem.check_for_undefined_classes()
     sem.impede_inheritance_from_base_classes()
+    sem.check_for_inheritance_cycles()
