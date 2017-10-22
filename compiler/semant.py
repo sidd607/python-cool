@@ -1,7 +1,12 @@
+"""  FUCKE UOUI """
 import parser
 import ast
 from collections import defaultdict
 import warnings
+from collections import MutableMapping, Set
+from ast import Attribute, Method
+from copy import deepcopy
+from utils import print_ast
 
 class SemantError(Exception):
     pass
@@ -15,13 +20,16 @@ class Semant:
         def __init__(self, sourcefile):
 
             self.classes_map = {}
+            
             self.ast = parser.get_ast(sourcefile)
+            #print(self.ast)
+            
             self.inheritance_graph = defaultdict(set)
 
         def populate_classes_map_and_inheritance_map(self):
 
-            print (self.ast)
-            objc = ast.Type(name="Object", inherits="None",features=())
+            #print (self.ast)
+            objc = ast.Type(name="Object", inherits=None,features=())
             ioc = ast.Type(name="IO", inherits="Object",features=())
             intc = ast.Type(name="Int", inherits="Object",features=())
             boolc = ast.Type(name="Bool", inherits="Object",features=())
@@ -61,7 +69,6 @@ class Semant:
 
         def visit_inheritance_tree(self,start_class,visited):
             visited[start_class] = True
-            print(visited)
             if start_class not in self.inheritance_graph.keys():
                 return True
 
@@ -82,7 +89,166 @@ class Semant:
             for k,v in visited.items():
                 if not v:
                     raise SemantError("%s involved in an inheritance cycle." % k)
+        
+        def check_scopes_and_infer_return_types(self,cl):
+            variable_scopes  = [dict()]
+            seen_attribute = set()
+            seen_method = set()
+            #Checking scopes
+            for feature in cl.features:
+                #print(feature)
+                if isinstance(feature, ast.Attribute):
+                    if feature.ident.name in seen_attribute:
+                        raise SemantError("attribute %s is already defined" %feature.name)
+                    seen_attribute.add(feature.ident.name)
+                    if feature.type == "SELF_TYPE":
+                        variable_scopes[-1][feature.ident.name] = cl.type
+                    else:
+                        variable_scopes[-1][feature.ident.name] = feature.type #[-1] is for latest scope
+                print('------------------------------------')
+            for feature in cl.features:
+                if isinstance(feature,ast.Method):
+                    if feature.ident.name in seen_method:
+                        raise SemantError("method %s is already defined" % feature.name)
+                    seen_method.add(feature.ident.name)
+                    variable_scopes.append(dict()) #adding new scope
 
+                    seen_formals = set()
+                    for form in feature.formals:
+                        if form.ident.name in seen_formals:
+                            raise SemantError(("formal %s in method %s is already defined" % (formal[0], feature.name)));
+                        seen_formals.add(form)
+                        variable_scopes[-1][form.ident.name] = form.type
+                    # traverse_expression(feature.body, variable_scopes, cl)
+                    del variable_scopes[-1]
+                # elif isinstance(feature, Attr):
+                #     traverse_expression(feature.body, variable_scopes, cl)
+
+            print (variable_scopes)
+            print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+
+
+
+
+        def expand_inherited_classes(self, start_class="Object"):
+            """Apply inheritance rules through the class graph"""
+            
+            cl = self.classes_map[start_class]
+            
+            if cl.inherits:
+                parent_cl = self.classes_map[cl.inherits]
+                attr_set_child = [i for i in cl.features if isinstance(i, Attribute)]
+                attr_set_parent = [i for i in parent_cl.features if isinstance(i, Attribute)]
+                for attr in attr_set_child:
+                    for pattr in attr_set_parent:
+                        if attr.name == pattr.name:
+                            raise SemantError("Attribute cannot be redefined in child class: " + cl.name + ", Attribute: " + attr.name)
+                method_set_child = [i for i in cl.features if isinstance(i, Method)]
+                method_set_parent = [i for i in parent_cl.features if isinstance(i, Method)]
+
+                def extract_signatures(method_set):
+                    method_signatures = {}
+                    for method in method_set:
+                        method_signatures[method.ident.name] = {}
+                        for formal in method.formals:
+                            method_signatures[method.ident.name][formal.ident.name] = formal.type
+                        method_signatures[method.ident.name]['return'] = method.type
+                    return method_signatures
+                
+                method_signatures_child = extract_signatures(method_set_child)
+                method_signatures_parent = extract_signatures(method_set_parent)
+
+                methods_in_child = set()
+
+                for method in method_set_child:
+                    methods_in_child.add(method.ident.name)
+                    if method.ident.name in method_signatures_parent:
+                        parent_signature = method_signatures_parent[method.ident.name]
+                        child_signature = method_signatures_child[method.ident.name]
+                        if parent_signature != child_signature:
+                            raise SemantError("Redefined method %s cannot change arguments or return type of the parent method" % method.ident.name)
+                
+                for method in method_set_parent:
+                    if method.ident.name not in methods_in_child:
+                        new_method = deepcopy(method)
+                        
+                        # TODO new_method.inherited_from = cl.parent  # used in codegen, to reuse function bodies
+                        cl.features.append(new_method)
+                for attr in attr_set_parent:
+                    cl.features.append(deepcopy(attr))
+            
+            all_children = self.inheritance_graph[start_class]
+            for child in all_children:
+                self.expand_inherited_classes(child)
+
+
+
+class VariablesScopeDict(MutableMapping):
+    """dictionary of varname->type that represent variable scope in the ast"""
+
+    def __init__(self):
+        self.store = [dict()]
+
+    def __getitem__(self, key):
+        for scope in self.store[::-1]:
+            if key in scope:
+                return scope[key]
+        raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        self.store[-1][key] = value
+
+    def __delitem__(self, key):
+        del self.store[-1][key]
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
+
+    def new_scope(self):
+        self.store.append(dict())
+
+    def destroy_scope(self):
+        del self.store[-1]
+
+
+class VariablesScopeSet(Set):
+    """dictionary of varnames that represent variable scope in the ast"""
+
+    def __init__(self):
+        self.store = [set()]
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __contains__(self, value):
+        for scope in self.store[::-1]:
+            if value in scope:
+                return True
+        return False
+
+    def __len__(self):
+        raise NotImplementedError
+
+    def add(self, value):
+        """just call add on the last set"""
+        self.store[-1].add(value)
+
+    def new_scope(self):
+        self.store.append(set())
+
+    def destroy_scope(self):
+        del self.store[-1]
+
+def check_scopes_and_infer_return_type(cl):
+    pass
+
+
+
+    
+        
 
 if __name__ == '__main__':
 
@@ -93,3 +259,8 @@ if __name__ == '__main__':
     sem.check_for_undefined_classes()
     sem.impede_inheritance_from_base_classes()
     sem.check_for_inheritance_cycles()
+    #print(sem.classes_map)
+    sem.expand_inherited_classes()
+    #print("------------------------------------------------------")
+    #print()
+    print_ast(sem.ast)

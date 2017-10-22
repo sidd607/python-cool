@@ -65,7 +65,7 @@ def p_features_opt(p):
     """features_opt : features
                     | empty"""
     if p.slice[1].type == 'empty':
-        p[0] = tuple()
+        p[0] = []
     else:
         p[0] = p[1]
 
@@ -73,9 +73,9 @@ def p_features(p):
     """features : feature
                 | feature features"""
     if len(p) == 2:
-        p[0] = (p[1],)
+        p[0] = [p[1]]
     elif len(p) == 3:
-        p[0] = (p[1],) + p[2]
+        p[0] = [p[1]] + p[2]
     else:
         raise SyntaxError('Invalid number of symbols')
 
