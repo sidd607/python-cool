@@ -99,7 +99,7 @@ class Semant:
                 #print(feature)
                 if isinstance(feature, ast.Attribute):
                     if feature.ident.name in seen_attribute:
-                        raise SemantError("attribute %s is already defined" %feature.name)
+                        raise SemantError("attribute %s is already defined" %feature.ident.name)
                     seen_attribute.add(feature.ident.name)
                     if feature.type == "SELF_TYPE":
                         variable_scopes[-1][feature.ident.name] = cl.type
@@ -193,6 +193,7 @@ if __name__ == '__main__':
     sem.check_for_undefined_classes()
     sem.impede_inheritance_from_base_classes()
     sem.check_for_inheritance_cycles()
+    print (sem.ast)
     #print(sem.classes_map)
     for cl in sem.classes_map.values():
         sem.check_scopes_and_infer_return_types(cl)

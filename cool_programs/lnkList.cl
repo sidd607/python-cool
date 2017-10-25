@@ -23,7 +23,7 @@ class Cons inherits List {
 	};
 };
 
-class Main inherits IO {
+class Main inherits wer {
 
 	mylist: List;
 
