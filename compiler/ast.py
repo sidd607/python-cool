@@ -1,21 +1,27 @@
 from collections import namedtuple
+from types import new_class
 
+class Returnable:
+    return_type = None
 
-Assignment = namedtuple('Assignment', 'ident expr')
-Attribute = namedtuple('Attribute', 'ident type expr')
-BinaryOperation = namedtuple('BinaryOperation', 'operator left right')
-Block = namedtuple('Block', 'elements')
-Case = namedtuple('Case', 'expr typeactions')
-Formal = namedtuple('Formal', 'ident type')
-FunctionCall = namedtuple('FunctionCall', 'ident params')
-Ident = namedtuple('Ident', 'name')
-If = namedtuple('If', 'condition true false')
-Let = namedtuple('Let', 'assignments expr')
-MethodCall = namedtuple('MethodCall', 'object targettype method')
-Method = namedtuple('Method', 'ident type formals expr')
-New = namedtuple('New', 'type')
-Type = namedtuple('Type', 'name inherits features')
-TypeAction = namedtuple('TypeAction', 'ident type expr')
-UnaryOperation = namedtuple('UnaryOperation', 'operator right')
-While = namedtuple('While', 'condition action')
-Self = namedtuple('Self','ident')
+def returnable_namedtuple(type_name, fields):
+    return new_class(type_name, (Returnable, namedtuple(type_name, fields)))
+
+Assignment = returnable_namedtuple('Assignment', 'ident expr')
+Attribute = returnable_namedtuple('Attribute', 'ident type expr')
+BinaryOperation = returnable_namedtuple('BinaryOperation', 'operator left right')
+Block = returnable_namedtuple('Block', 'elements')
+Case = returnable_namedtuple('Case', 'expr typeactions')
+Formal = returnable_namedtuple('Formal', 'ident type')
+FunctionCall = returnable_namedtuple('FunctionCall', 'ident params')
+Ident = returnable_namedtuple('Ident', 'name')
+If = returnable_namedtuple('If', 'condition true false')
+Let = returnable_namedtuple('Let', 'assignments expr')
+MethodCall = returnable_namedtuple('MethodCall', 'object targettype method')
+Method = returnable_namedtuple('Method', 'ident type formals expr')
+New = returnable_namedtuple('New', 'type')
+Type = returnable_namedtuple('Type', 'name inherits features')
+TypeAction = returnable_namedtuple('TypeAction', 'ident type expr')
+UnaryOperation = returnable_namedtuple('UnaryOperation', 'operator right')
+While = returnable_namedtuple('While', 'condition action')
+Self = returnable_namedtuple('Self','ident')

@@ -10,7 +10,6 @@ class List {
 class Cons inherits List {
 	hd : Int;
 	tl : List;
-	hd : Int;
 	isNil():Bool {false};
 	head(): Int {hd};
 	tail(): List {tl};
@@ -23,7 +22,7 @@ class Cons inherits List {
 	};
 };
 
-class Main inherits wer {
+class Main inherits IO {
 
 	mylist: List;
 

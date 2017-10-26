@@ -180,8 +180,28 @@ class Semant:
             for child in all_children:
                 self.expand_inherited_classes(child)
 
-
-
+        def is_child(self,child_class, parent_class):
+        """check whether childcl is a descendent of parentcl"""
+            if child_class == parent_class:
+                return True
+            for cl in self.inheritance_graph[parent_class]:
+                if is_child(child_class, cl):
+                    return True
+            return False
+        def type_check(cl):
+            '''Make sure the inferred types match the declared types'''
+            for feature in cl.features:
+                if isinstance(feature, Attribute):
+                    if feature.type == "SELF_TYPE":
+                        realtype = cl.name
+                    else:
+                        realtype = feature.type
+                    if feature.expr:
+                        type_check_expression(feature.body,cl)
+                        child_type = feature.bpdy.return_type
+                        pare_type = realtype
+                    if not is_child(child_type,parent_type):
+                        raise SemantError("Inferred type %s for attribute %s does not conform to declared type %s" % (child_type, feature.name, parent_type))
 
 
 if __name__ == '__main__':
@@ -193,7 +213,7 @@ if __name__ == '__main__':
     sem.check_for_undefined_classes()
     sem.impede_inheritance_from_base_classes()
     sem.check_for_inheritance_cycles()
-    print (sem.ast)
+    print_ast(sem.ast)
     #print(sem.classes_map)
     for cl in sem.classes_map.values():
         sem.check_scopes_and_infer_return_types(cl)
