@@ -1,7 +1,10 @@
 class Main inherits IO {
-	hd: Int;
-	hd: Int;
-  main() : Object {
-    out_string("123") --Hello
+  tmp: Int;
+  tmpo(x:Int, y:Int): Object{
+    out_string("123")
   };
+  main() : Object {{
+    out_string("123"); 
+    tmp <- 1+2;
+  }};
 };
