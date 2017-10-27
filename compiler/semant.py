@@ -114,10 +114,11 @@ class Semant:
             for cl in self.ast:
                 for feature in cl.features:
                     if isinstance(feature, ast.Method):
-                        if feature.ident.name in seen_method:
+                        tmp = (feature.ident.name, cl.name)
+                        if tmp in seen_method:
                             raise SemantError("Method already defined: " + feature.ident.name)
                             return
-                        seen_method[feature.ident.name] = feature.type
+                        seen_method[tmp] = feature.type
             for key in seen_method:
                 print (key, seen_method[key])
 
@@ -198,6 +199,8 @@ class Semant:
 
         
         def traverse_expression(self, expression, variable_scopes, cl):
+            print (expression)
+            
             if isinstance(expression, ast.BinaryOperation):
                 self.traverse_expression(expression.left, variable_scopes, cl)
                 self.traverse_expression(expression.right, variable_scopes, cl)
@@ -205,12 +208,14 @@ class Semant:
                     expression.return_type = 'Bool'
                 else:
                     expression.return_type = 'Int'
-                print(expression.return_type, expression)
+                print("***: ", expression.return_type, expression)
+                
 
             elif isinstance(expression, ast.While):
                 self.traverse_expression(expression.condition, variable_scopes, cl)
                 self.traverse_expression(expression.action, variable_scopes, cl)
                 print(expression.return_type, expression)
+                print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.Block):
                 last_type = None
@@ -218,13 +223,13 @@ class Semant:
                     self.traverse_expression(expr, variable_scopes, cl)
                     last_type = getattr(expr, 'return_type', None)
                 expression.return_type = last_type
-                print(expression.return_type, expression)
+                print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.Assignment):
                 self.traverse_expression(expression.expr, variable_scopes, cl)
                 self.traverse_expression(expression.ident, variable_scopes, cl)
                 expression.return_type = expression.ident.return_type
-                print(expression.return_type, expression)
+                print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.If):
                 self.traverse_expression(expression.condition, variable_scopes, cl)
@@ -236,7 +241,7 @@ class Semant:
                 false_tyep = self.classes_map[expression.false.return_type]
                 #ret_type = self.lowest_common_ancestor(true_type, false_tyep)
                 #expression.return_type = ret_type
-                print(expression.return_type, expression)
+                print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.Case):
                 pass
@@ -246,11 +251,19 @@ class Semant:
                     expression.return_type = cl.name
                     return
                 expression.return_type = expression.type
-                print(expression.return_type, expression)
+                print("***: ", expression.return_type, expression)
+            elif isinstance(expression, ast.Ident):
+                for scope in variable_scopes[::-1]:
+                    if expression.name in scope:
+                        expression.return_type = scope[expression.name]
+                        print("***: ", expression.return_type, expression)
+                        return
+                raise SemantError("Variable not declared in scope: " + expression.name + " in class: "+ cl.name)
+            
+
             else:
-                print("________________", expression)
-
-
+                print("-----------------", expression)
+            
         def expand_inherited_classes(self, start_class="Object"):
             """Apply inheritance rules through the class graph"""
 
@@ -412,7 +425,9 @@ if __name__ == '__main__':
     sem.impede_inheritance_from_base_classes()
     sem.check_for_inheritance_cycles()
     print(sem.ast)
+    print("---------------------")
     sem.create_method_map()
+    print("---------------------")
     #print(sem.classes_map)
     for cl in sem.classes_map.values():
         sem.check_scopes_and_infer_return_types(cl)
