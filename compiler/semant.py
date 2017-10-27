@@ -40,7 +40,7 @@ class Semant:
                 ast.Method(ident = ast.Ident(name = 'in_string'), type = 'SELF_TYPE', formals = (), expr = None),
                 ast.Method(
                     ident = ast.Ident(name = 'out_int'),
-                    type = 'SELF_TYPE', 
+                    type = 'SELF_TYPE',
                     formals = (
                         ast.Formal(ident = ast.Ident(name = 'arg'), type = 'Int'),
                     ),
@@ -66,17 +66,17 @@ class Semant:
                 ast.Attribute(ident = ast.Ident(name = '_str_field'), type = 'SELF_TYPE', expr = None),
                 ast.Method(ident = ast.Ident(name = 'length'), type = 'Int', formals = (), expr = None),
                 ast.Method(
-                    ident = ast.Ident(name = 'concat'), type = 'String', 
+                    ident = ast.Ident(name = 'concat'), type = 'String',
                     formals = (
                         ast.Formal(ast.Ident(name = 'arg'), type = 'Int'),
                     ),
                     expr = None
-                ), 
+                ),
                 ast.Method(
                     ident = ast.Ident(name = 'substr'),
-                    type = 'String', 
+                    type = 'String',
                     formals = (
-                        ast.Formal(ident = ast.Ident(name = 'arg1'), type = 'Int'), 
+                        ast.Formal(ident = ast.Ident(name = 'arg1'), type = 'Int'),
                         ast.Formal(ident = ast.Ident(name = 'arg2'), type = 'Int')
                     ),
                     expr = None
@@ -171,13 +171,13 @@ class Semant:
                         raise SemantError("attribute %s is already defined" %feature.ident.name)
                     seen_attribute.add(feature.ident.name)
                     if feature.type == "SELF_TYPE":
-                        
+
                         variable_scopes[-1][feature.ident.name] = cl.name
                     else:
                         variable_scopes[-1][feature.ident.name] = feature.type #[-1] is for latest scope
             for feature in cl.features:
                 if isinstance(feature,ast.Method):
-                    
+
                     if feature.ident.name in seen_method:
                         raise SemantError("method %s is already defined" % feature.name)
                     seen_method.add(feature.ident.name)
@@ -185,7 +185,7 @@ class Semant:
 
                     seen_formals = set()
                     for form in feature.formals:
-                        
+
                         if form.ident.name in seen_formals:
                             raise SemantError(("formal %s in method %s is already defined" % (formal[0], feature.name)));
                         seen_formals.add(form)
@@ -196,12 +196,11 @@ class Semant:
                     self.traverse_expression(feature.expr, variable_scopes, cl)
 
             print (variable_scopes)
-            
 
-        
+
+
         def traverse_expression(self, expression, variable_scopes, cl):
-            print (expression)
-            
+
             if isinstance(expression, ast.BinaryOperation):
                 self.traverse_expression(expression.left, variable_scopes, cl)
                 self.traverse_expression(expression.right, variable_scopes, cl)
@@ -210,7 +209,7 @@ class Semant:
                 else:
                     expression.return_type = 'Int'
                 print("***: ", expression.return_type, expression)
-                
+
 
             elif isinstance(expression, ast.While):
                 self.traverse_expression(expression.condition, variable_scopes, cl)
@@ -246,7 +245,7 @@ class Semant:
 
             elif isinstance(expression, ast.Case):
                 pass
-            
+
             elif isinstance(expression, ast.New):
                 if expression.type == 'SELF_TYPE':
                     expression.return_type = cl.name
@@ -260,7 +259,7 @@ class Semant:
                         print("***: ", expression.return_type, expression)
                         return
                 raise SemantError("Variable not declared in scope: " + expression.name + " in class: "+ cl.name)
-            
+                         
             elif isinstance(expression, ast.FunctionCall):
                 tmp = (expression.ident.name, cl.name)
                 print (tmp)
@@ -272,10 +271,9 @@ class Semant:
                         pass
                     else:
                         expression.return_type = self.method_map[tmp]
-
             else:
                 print("-----------------", expression)
-            
+
         def expand_inherited_classes(self, start_class="Object"):
             """Apply inheritance rules through the class graph"""
 
@@ -335,17 +333,18 @@ class Semant:
                 if is_child(child_class, cl):
                     return True
             return False
-        
+
         def type_check(self,cl):
             '''Make sure the inferred types match the declared types'''
             for feature in cl.features:
-                if isinstance(feature, Attribute):
+                if isinstance(feature, ast.Attribute):
+                    print(feature)
                     if feature.type == "SELF_TYPE":
                         realtype = cl.name
                     else:
                         realtype = feature.type
                     if feature.expr:
-                        self.type_check_expression(feature.body,cl)
+                        self.type_check_expression(feature.expr,cl)
                         child_type = feature.expr.return_type
                         parent_type = realtype
                         if not self.is_child(child_type,parent_type):
@@ -376,10 +375,16 @@ class Semant:
 
         def type_check_expression(self,expression,cl):
             '''make sure types validate at any point in the ast'''
+            print(expression)
             if isinstance(expression,ast.Assignment):
                 self.type_check_expression(expression.expr, cl)
-                if not is_conformant(expression.expr.return_type, expression.ident.name.return_type):
+                if not is_child(expression.expr.return_type, expression.ident.name.return_type):
                     raise SemantError("The inferred type %s for %s is not conformant to declared type %s" % (expression.expr.return_type, expression.ident.name, expression.name.return_type))
+            elif isinstance(expression,ast.BinaryOperation):
+                self.type_check_expression(expression.left,cl)
+                self.type_check_expression(expression.right,cl)
+                if not (self.is_child(expression.left.return_type, expression.right.return_type) or self.is_child(expression.right.return_type, expression.left.return_type)):
+                    raise SemantError("The inferred type %s for %s is not conformant to declared type %s" % (expression.left.return_type, expression.ident.name, expression.right.return_type))
 
             elif isinstance(expression, ast.If):
                 self.type_check_expression(expression.condition, cl)
@@ -451,5 +456,5 @@ if __name__ == '__main__':
         sem.type_check(cl)
     
     print("------------------------------------------------------")
-    print(sem.ast)
+    #print(sem.ast)
     #print_ast(sem.ast)
