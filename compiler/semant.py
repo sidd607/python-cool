@@ -259,7 +259,7 @@ class Semant:
                         print("***: ", expression.return_type, expression)
                         return
                 raise SemantError("Variable not declared in scope: " + expression.name + " in class: "+ cl.name)
-                         
+
             elif isinstance(expression, ast.FunctionCall):
                 tmp = (expression.ident.name, cl.name)
                 print (tmp)
@@ -267,7 +267,7 @@ class Semant:
                 if  tmp not in self.method_map:
                     raise SemantError("Function definition not found in scope: " + expression.ident.name + " in class: " + cl.name)
                 else:
-                    if self.method_map(tmp) == 'SELF_TYPE':
+                    if self.method_map[tmp] == 'SELF_TYPE':
                         pass
                     else:
                         expression.return_type = self.method_map[tmp]
@@ -384,7 +384,7 @@ class Semant:
                 self.type_check_expression(expression.left,cl)
                 self.type_check_expression(expression.right,cl)
                 if not (self.is_child(expression.left.return_type, expression.right.return_type) or self.is_child(expression.right.return_type, expression.left.return_type)):
-                    raise SemantError("The inferred type %s for %s is not conformant to declared type %s" % (expression.left.return_type, expression.ident.name, expression.right.return_type))
+                    raise SemantError("The inferred type %s for %s is not conformant to declared type %s in %s" % (expression.left.return_type, expression.operator, expression.right.return_type, expression))
 
             elif isinstance(expression, ast.If):
                 self.type_check_expression(expression.condition, cl)
@@ -433,28 +433,26 @@ class Semant:
 
 
 if __name__ == '__main__':
-
-    import sys
-    sourcefile = sys.argv[1]
-    sem = Semant(sourcefile)
-    sem.populate_classes_map_and_inheritance_map()
-    sem.expand_inherited_classes()
-    sem.create_method_map()
-    print(sem.ast)
-    sem.check_for_undefined_classes()
-    sem.impede_inheritance_from_base_classes()
-    sem.check_for_inheritance_cycles()
-    
-    print(sem.ast)
-    print("---------------------")
-    
-    print("---------------------")
-    #print(sem.classes_map)
-    for cl in sem.classes_map.values():
-        sem.check_scopes_and_infer_return_types(cl)
-    for cl in sem.classes_map.values():
-        sem.type_check(cl)
-    
-    print("------------------------------------------------------")
-    #print(sem.ast)
-    #print_ast(sem.ast)
+    try:
+        import sys
+        sourcefile = sys.argv[1]
+        sem = Semant(sourcefile)
+        sem.populate_classes_map_and_inheritance_map()
+        sem.check_for_undefined_classes()
+        sem.impede_inheritance_from_base_classes()
+        sem.expand_inherited_classes()
+        sem.create_method_map()
+        print(sem.ast)
+        sem.check_for_inheritance_cycles()
+        
+        #print(sem.classes_map)
+        for cl in sem.classes_map.values():
+            sem.check_scopes_and_infer_return_types(cl)
+        for cl in sem.classes_map.values():
+            sem.type_check(cl)
+        print("Semantic Passed:")
+        print("------------------------------------------------------")
+        #print(sem.ast)
+        print(sem.ast)
+    except Exception as e:
+        print ("ERROR: %s" % e)
