@@ -121,6 +121,7 @@ class Semant:
                         seen_method[tmp] = feature.type
             for key in seen_method:
                 print (key, seen_method[key])
+            self.method_map = seen_method
 
         def check_for_undefined_classes(self):
             initial_parents = list(self.inheritance_graph.keys())
@@ -260,6 +261,17 @@ class Semant:
                         return
                 raise SemantError("Variable not declared in scope: " + expression.name + " in class: "+ cl.name)
             
+            elif isinstance(expression, ast.FunctionCall):
+                tmp = (expression.ident.name, cl.name)
+                print (tmp)
+                print (self.method_map)
+                if  tmp not in self.method_map:
+                    raise SemantError("Function definition not found in scope: " + expression.ident.name + " in class: " + cl.name)
+                else:
+                    if self.method_map(tmp) == 'SELF_TYPE':
+                        pass
+                    else:
+                        expression.return_type = self.method_map[tmp]
 
             else:
                 print("-----------------", expression)
@@ -421,19 +433,23 @@ if __name__ == '__main__':
     sourcefile = sys.argv[1]
     sem = Semant(sourcefile)
     sem.populate_classes_map_and_inheritance_map()
+    sem.expand_inherited_classes()
+    sem.create_method_map()
+    print(sem.ast)
     sem.check_for_undefined_classes()
     sem.impede_inheritance_from_base_classes()
     sem.check_for_inheritance_cycles()
+    
     print(sem.ast)
     print("---------------------")
-    sem.create_method_map()
+    
     print("---------------------")
     #print(sem.classes_map)
     for cl in sem.classes_map.values():
         sem.check_scopes_and_infer_return_types(cl)
     for cl in sem.classes_map.values():
         sem.type_check(cl)
-    sem.expand_inherited_classes()
+    
     print("------------------------------------------------------")
     print(sem.ast)
     #print_ast(sem.ast)
