@@ -1,4 +1,10 @@
-"""  FUCKE UOUI """
+#!/usr/bin/env python3
+"""
+	author: abhinavmufc, sidd607
+	last modified: 25 October 2017
+	revision: 0.1.4
+"""
+
 import parser
 import ast
 from collections import defaultdict
@@ -93,9 +99,9 @@ class Semant:
             # self.inheritance_graph["Object"].add(boolc.name)
             # self.classes_map[stringc.name] = stringc
             # self.inheritance_graph["Object"].add(stringc.name)
-            for cl in self.ast:
-                print(cl)
-                print("\n")
+            #for cl in self.ast:
+                #print(cl)
+                #print("\n")
             for cl in self.ast:
                 if cl.name in self.classes_map:
                     raise SemantError("class %s already defined" % cl.name)
@@ -119,8 +125,8 @@ class Semant:
                             raise SemantError("Method already defined: " + feature.ident.name)
                             return
                         seen_method[tmp] = feature.type
-            for key in seen_method:
-                print (key, seen_method[key])
+            #for key in seen_method:
+                #print (key, seen_method[key])
             self.method_map = seen_method
 
         def check_for_undefined_classes(self):
@@ -195,7 +201,7 @@ class Semant:
                 elif isinstance(feature, ast.Attribute):
                     self.traverse_expression(feature.expr, variable_scopes, cl)
 
-            print (variable_scopes)
+            #print (variable_scopes)
 
 
 
@@ -208,14 +214,14 @@ class Semant:
                     expression.return_type = 'Bool'
                 else:
                     expression.return_type = 'Int'
-                print("***: ", expression.return_type, expression)
+                #print("***: ", expression.return_type, expression)
 
 
             elif isinstance(expression, ast.While):
                 self.traverse_expression(expression.condition, variable_scopes, cl)
                 self.traverse_expression(expression.action, variable_scopes, cl)
-                print(expression.return_type, expression)
-                print("***: ", expression.return_type, expression)
+                #print(expression.return_type, expression)
+                #print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.Block):
                 last_type = None
@@ -223,25 +229,25 @@ class Semant:
                     self.traverse_expression(expr, variable_scopes, cl)
                     last_type = getattr(expr, 'return_type', None)
                 expression.return_type = last_type
-                print("***: ", expression.return_type, expression)
+                #print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.Assignment):
                 self.traverse_expression(expression.expr, variable_scopes, cl)
                 self.traverse_expression(expression.ident, variable_scopes, cl)
                 expression.return_type = expression.ident.return_type
-                print("***: ", expression.return_type, expression)
+                #print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.If):
                 self.traverse_expression(expression.condition, variable_scopes, cl)
                 self.traverse_expression(expression.true, variable_scopes, cl)
                 self.traverse_expression(expression.false, variable_scopes, cl)
-                print("\n\n\n",self.classes_map)
-                print(expression.true)
+                #print("\n\n\n",self.classes_map)
+                #print(expression.true)
                 true_type = self.classes_map[expression.true.return_type]
                 false_tyep = self.classes_map[expression.false.return_type]
                 #ret_type = self.lowest_common_ancestor(true_type, false_tyep)
                 #expression.return_type = ret_type
-                print("***: ", expression.return_type, expression)
+                #print("***: ", expression.return_type, expression)
 
             elif isinstance(expression, ast.Case):
                 pass
@@ -251,19 +257,19 @@ class Semant:
                     expression.return_type = cl.name
                     return
                 expression.return_type = expression.type
-                print("***: ", expression.return_type, expression)
+                #print("***: ", expression.return_type, expression)
             elif isinstance(expression, ast.Ident):
                 for scope in variable_scopes[::-1]:
                     if expression.name in scope:
                         expression.return_type = scope[expression.name]
-                        print("***: ", expression.return_type, expression)
+                        #print("***: ", expression.return_type, expression)
                         return
                 raise SemantError("Variable not declared in scope: " + expression.name + " in class: "+ cl.name)
 
             elif isinstance(expression, ast.FunctionCall):
                 tmp = (expression.ident.name, cl.name)
-                print (tmp)
-                print (self.method_map)
+                #print (tmp)
+                #print (self.method_map)
                 if  tmp not in self.method_map:
                     raise SemantError("Function definition not found in scope: " + expression.ident.name + " in class: " + cl.name)
                 else:
@@ -338,7 +344,7 @@ class Semant:
             '''Make sure the inferred types match the declared types'''
             for feature in cl.features:
                 if isinstance(feature, ast.Attribute):
-                    print(feature)
+                    #print(feature)
                     if feature.type == "SELF_TYPE":
                         realtype = cl.name
                     else:
@@ -375,7 +381,7 @@ class Semant:
 
         def type_check_expression(self,expression,cl):
             '''make sure types validate at any point in the ast'''
-            print(expression)
+            #print(expression)
             if isinstance(expression,ast.Assignment):
                 self.type_check_expression(expression.expr, cl)
                 if not is_child(expression.expr.return_type, expression.ident.name.return_type):
@@ -432,27 +438,28 @@ class Semant:
             #                 raise SemantError("Argument {} passed to method {} in class {} is not conformant to its {} declaration".format(expr.return_type, called_method.ident.name, bodycl.name, formal[1]))
 
 
-if __name__ == '__main__':
+    
+def run_semant(sourcefile):
     try:
-        import sys
-        sourcefile = sys.argv[1]
         sem = Semant(sourcefile)
         sem.populate_classes_map_and_inheritance_map()
         sem.check_for_undefined_classes()
         sem.impede_inheritance_from_base_classes()
         sem.expand_inherited_classes()
         sem.create_method_map()
-        print(sem.ast)
         sem.check_for_inheritance_cycles()
-        
-        #print(sem.classes_map)
         for cl in sem.classes_map.values():
             sem.check_scopes_and_infer_return_types(cl)
         for cl in sem.classes_map.values():
             sem.type_check(cl)
-        print("Semantic Passed:")
-        print("------------------------------------------------------")
-        #print(sem.ast)
-        print(sem.ast)
+        print("\n\n\nSemantic Passed")
+        print_ast(sem.ast)
+        return sem.ast
+    
     except Exception as e:
-        print ("ERROR: %s" % e)
+        print ("Error: %s"%e)
+            
+if __name__ == '__main__':
+    import sys
+    sourcefile = sys.argv[1]
+    run_semant(sourcefile)
