@@ -1,12 +1,13 @@
 class Main inherits IO {
   tmp: Int;
-  tmp2: Int;
-  tmp3: String <- tmp+tmp2;
-  tmpo(x:Int, y:Int): Object{
-    out_string("123")
+  test: String;
+  tmpo(x:Int): Int{
+    x + tmp
   };
+
   main() : Object {{
+    tmp <- 1;
     out_string("123"); 
-    tmp <- tmp+tmp2;
+    test <- tmpo(tmp);
   }};
 };

@@ -1,0 +1,13 @@
+[{}]
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+[{}]
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+[{}]
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+[{}]
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+[{}]
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+[{'tmp': 'Bool'}]
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+(Type(name='Main', inherits='IO', features=[Attribute(ident=Ident(name='tmp'), type='Bool', expr=None), Method(ident=Ident(name='main'), type='Object', formals=(), expr=Block(elements=(Assignment(ident=Ident(name='tmp'), expr=BinaryOperation(operator='<', left=1, right=3)), FunctionCall(ident=Ident(name='out_string'), params=('Hello World\\n',)))))]),)
